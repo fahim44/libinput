@@ -3753,6 +3753,7 @@ tp_init(struct tp_dispatch *tp,
 	tp_init_scroll(tp, device);
 	tp_init_gesture(tp);
 	tp_init_thumb(tp);
+	evdev_init_three_finger_drag(device);
 
 	/* Lenovo X1 Gen6 buffers the events in a weird way, making jump
 	 * detection impossible. See
