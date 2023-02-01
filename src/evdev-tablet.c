@@ -455,6 +455,10 @@ tablet_update_xy(struct tablet_dispatch *tablet,
 	const struct input_absinfo *absinfo;
 	int value;
 
+	if (!libevdev_has_event_code(device->evdev, EV_ABS, ABS_X) ||
+	    !libevdev_has_event_code(device->evdev, EV_ABS, ABS_Y))
+		return;
+
 	if (bit_is_set(tablet->changed_axes, LIBINPUT_TABLET_TOOL_AXIS_X) ||
 	    bit_is_set(tablet->changed_axes, LIBINPUT_TABLET_TOOL_AXIS_Y)) {
 		absinfo = libevdev_get_abs_info(device->evdev, ABS_X);
@@ -528,6 +532,9 @@ tablet_update_pressure(struct tablet_dispatch *tablet,
 {
 	const struct input_absinfo *absinfo;
 
+	if (!libevdev_has_event_code(device->evdev, EV_ABS, ABS_PRESSURE))
+		return;
+
 	if (bit_is_set(tablet->changed_axes,
 		       LIBINPUT_TABLET_TOOL_AXIS_PRESSURE)) {
 		absinfo = libevdev_get_abs_info(device->evdev, ABS_PRESSURE);
@@ -540,6 +547,9 @@ tablet_update_distance(struct tablet_dispatch *tablet,
 		       struct evdev_device *device)
 {
 	const struct input_absinfo *absinfo;
+
+	if (!libevdev_has_event_code(device->evdev, EV_ABS, ABS_DISTANCE))
+		return;
 
 	if (bit_is_set(tablet->changed_axes,
 		       LIBINPUT_TABLET_TOOL_AXIS_DISTANCE)) {
@@ -554,6 +564,9 @@ tablet_update_slider(struct tablet_dispatch *tablet,
 {
 	const struct input_absinfo *absinfo;
 
+	if (!libevdev_has_event_code(device->evdev, EV_ABS, ABS_WHEEL))
+		return;
+
 	if (bit_is_set(tablet->changed_axes,
 		       LIBINPUT_TABLET_TOOL_AXIS_SLIDER)) {
 		absinfo = libevdev_get_abs_info(device->evdev, ABS_WHEEL);
@@ -566,6 +579,10 @@ tablet_update_tilt(struct tablet_dispatch *tablet,
 		   struct evdev_device *device)
 {
 	const struct input_absinfo *absinfo;
+
+	if (!libevdev_has_event_code(device->evdev, EV_ABS, ABS_TILT_X) ||
+	    !libevdev_has_event_code(device->evdev, EV_ABS, ABS_TILT_Y))
+		return;
 
 	/* mouse rotation resets tilt to 0 so always fetch both axes if
 	 * either has changed */
@@ -592,6 +609,9 @@ tablet_update_artpen_rotation(struct tablet_dispatch *tablet,
 			      struct evdev_device *device)
 {
 	const struct input_absinfo *absinfo;
+
+	if (!libevdev_has_event_code(device->evdev, EV_ABS, ABS_Z))
+		return;
 
 	if (bit_is_set(tablet->changed_axes,
 		       LIBINPUT_TABLET_TOOL_AXIS_ROTATION_Z)) {
@@ -1481,8 +1501,8 @@ tablet_calculate_arbitration_rect(struct tablet_dispatch *tablet)
 
 	mm = evdev_device_units_to_mm(device, &tablet->axes.point);
 
-	/* The rect we disable is 20mm left of the tip, 50mm north of the
-	 * tip, and 200x200mm large.
+	/* The rect we disable is 20mm left of the tip, 100mm north of the
+	 * tip, and 200x250mm large.
 	 * If the stylus is tilted left (tip further right than the eraser
 	 * end) assume left-handed mode.
 	 *
@@ -1503,8 +1523,8 @@ tablet_calculate_arbitration_rect(struct tablet_dispatch *tablet)
 		r.x = 0;
 	}
 
-	r.y = mm.y - 50;
-	r.h = 200;
+	r.y = mm.y - 100;
+	r.h = 250;
 	if (r.y < 0) {
 		r.h -= r.y;
 		r.y = 0;
