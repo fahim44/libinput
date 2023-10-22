@@ -36,7 +36,7 @@
 # <distribution>:<version>@activity:
 #  e.g. fedora:31@build-default
 
-.templates_sha: &template_sha 9f0eb526291fe74651fe1430cbd2397f4c0a819b
+.templates_sha: &template_sha dd90ac0d7a03b574eb4f18d7358083f0c97825f3
 
 include:
   - project: 'freedesktop/ci-templates'
@@ -157,7 +157,7 @@ check-ci-script:
     - exit 1
 
 #
-# Verify that commit messages are as expected, signed-off, etc.
+# Verify that commit messages are as expected, etc.
 #
 
 check-commit:
@@ -165,7 +165,7 @@ check-commit:
     - .fdo.ci-fairy
   stage: sanity check
   script:
-    - ci-fairy -vv check-commits --signed-off-by --junit-xml=results.xml && exit 0 || true
+    - ci-fairy -vv check-commits --junit-xml=results.xml && exit 0 || true
     - >
       printf "%s\n" \
         "Error checking commit format. Please verify" \
@@ -705,10 +705,10 @@ build rpm:
     - .policy
   stage: deploy
   variables:
-    FDO_DISTRIBUTION_VERSION: '36'
+    FDO_DISTRIBUTION_VERSION: '{{version}}'
     FDO_DISTRIBUTION_TAG: $FEDORA_TAG
   needs:
-    - "fedora:36@container-prep"
+    - "fedora:{{version}}@container-prep"
   script:
     - meson "$MESON_BUILDDIR"
     - VERSION=$(meson introspect "$MESON_BUILDDIR" --projectinfo | jq -r .version)

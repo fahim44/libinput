@@ -1057,10 +1057,15 @@ release_pressed_keys(struct fallback_dispatch *dispatch,
 				LIBINPUT_KEY_STATE_RELEASED);
 			break;
 		case KEY_TYPE_BUTTON:
+			/* Note: the left-handed configuration is nonzero for
+			 * the mapped button (not the physical button), in
+			 * get_key_down_count(). We must not map this to left-handed
+			 * again, see #881.
+			 */
 			evdev_pointer_notify_button(
 				device,
 				time,
-				evdev_to_left_handed(device, code),
+				code,
 				LIBINPUT_BUTTON_STATE_RELEASED);
 			break;
 		}
@@ -1497,7 +1502,6 @@ fallback_init_rotation(struct fallback_dispatch *dispatch,
 	dispatch->rotation.config.set_angle = fallback_rotation_config_set_angle;
 	dispatch->rotation.config.get_angle = fallback_rotation_config_get_angle;
 	dispatch->rotation.config.get_default_angle = fallback_rotation_config_get_default_angle;
-	dispatch->rotation.is_enabled = false;
 	matrix_init_identity(&dispatch->rotation.matrix);
 	device->base.config.rotation = &dispatch->rotation.config;
 }

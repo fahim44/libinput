@@ -1,5 +1,5 @@
 /*
- * Copyright © 2016 Red Hat, Inc.
+ * Copyright © 2023 Red Hat, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -27,6 +27,8 @@
 #include "litest-int.h"
 
 static struct input_event down[] = {
+	{ .type = EV_ABS, .code = ABS_X, .value = LITEST_AUTO_ASSIGN  },
+	{ .type = EV_ABS, .code = ABS_Y, .value = LITEST_AUTO_ASSIGN },
 	{ .type = EV_ABS, .code = ABS_MT_SLOT, .value = LITEST_AUTO_ASSIGN },
 	{ .type = EV_ABS, .code = ABS_MT_TRACKING_ID, .value = LITEST_AUTO_ASSIGN },
 	{ .type = EV_ABS, .code = ABS_MT_POSITION_X, .value = LITEST_AUTO_ASSIGN },
@@ -37,6 +39,8 @@ static struct input_event down[] = {
 
 static struct input_event move[] = {
 	{ .type = EV_ABS, .code = ABS_MT_SLOT, .value = LITEST_AUTO_ASSIGN },
+	{ .type = EV_ABS, .code = ABS_X, .value = LITEST_AUTO_ASSIGN  },
+	{ .type = EV_ABS, .code = ABS_Y, .value = LITEST_AUTO_ASSIGN },
 	{ .type = EV_ABS, .code = ABS_MT_POSITION_X, .value = LITEST_AUTO_ASSIGN },
 	{ .type = EV_ABS, .code = ABS_MT_POSITION_Y, .value = LITEST_AUTO_ASSIGN },
 	{ .type = EV_SYN, .code = SYN_REPORT, .value = 0 },
@@ -48,40 +52,49 @@ static struct litest_device_interface interface = {
 	.touch_move_events = move,
 };
 
-static struct input_absinfo absinfo[] = {
-	{ ABS_X, 0, 1500, 0, 0, 0 },
-	{ ABS_Y, 0, 2500, 0, 0, 0 },
-	{ ABS_MT_SLOT, 0, 9, 0, 0, 0 },
-	{ ABS_MT_POSITION_X, 0, 1500, 0, 0, 0 },
-	{ ABS_MT_POSITION_Y, 0, 2500, 0, 0, 0 },
-	{ ABS_MT_TRACKING_ID, 0, 65535, 0, 0, 0 },
-	{ .value = -1 },
-};
-
 static struct input_id input_id = {
-	.bustype = 0x11,
-	.vendor = 0x22,
-	.product = 0x33,
+	.bustype = 0x18,
+	.vendor = 0x4f3,
+	.product = 0x311c,
 };
 
 static int events[] = {
+	EV_KEY, BTN_LEFT,
+	EV_KEY, BTN_TOOL_FINGER,
 	EV_KEY, BTN_TOUCH,
-	INPUT_PROP_MAX, INPUT_PROP_DIRECT,
-	-1, -1
+	EV_KEY, BTN_TOOL_DOUBLETAP,
+	EV_KEY, BTN_TOOL_TRIPLETAP,
+	EV_KEY, BTN_TOOL_QUADTAP,
+	EV_KEY, BTN_TOOL_QUINTTAP,
+	INPUT_PROP_MAX, INPUT_PROP_POINTER,
+	INPUT_PROP_MAX, INPUT_PROP_BUTTONPAD,
+	-1, -1,
 };
 
-TEST_DEVICE("calibrated-touchscreen",
-	.type = LITEST_CALIBRATED_TOUCHSCREEN,
-	.features = LITEST_TOUCH|LITEST_PRECALIBRATED,
-	.interface = &interface,
+static struct input_absinfo absinfo[] = {
+	{ ABS_X, 0, 4654, 0, 0, 31 },
+	{ ABS_Y, 0, 2730, 0, 0, 31 },
+	{ ABS_MT_SLOT, 0, 4, 0, 0, 0 },
+	{ ABS_MT_POSITION_X, 0, 4654, 0, 0, 31 },
+	{ ABS_MT_POSITION_Y, 0, 2730, 0, 0, 31 },
+	{ ABS_MT_TOOL_TYPE, 0, 2, 0, 0, 0 },
+	{ ABS_MT_TRACKING_ID, 0, 65535, 0, 0, 0 },
+	{ .value = -1 }
+};
 
-	.name = "Calibrated Touchscreen",
+static const char quirk_file[] =
+"[litest Dell XPS 15 9500 Touchpad]\n"
+"MatchName=litest DELL097D:00 04F3:311C Touchpad\n"
+"ModelTouchpadVisibleMarker=0\n"
+"ModelTouchpadPhantomClicks=1\n";
+
+TEST_DEVICE("synaptics-phantomclicks",
+	.type = LITEST_SYNAPTICS_PHANTOMCLICKS,
+	.features = LITEST_TOUCHPAD | LITEST_CLICKPAD | LITEST_BUTTON,
+	.interface = &interface,
+	.name = "DELL097D:00 04F3:311C Touchpad",
 	.id = &input_id,
 	.events = events,
 	.absinfo = absinfo,
-	.udev_properties = {
-	{ "LIBINPUT_CALIBRATION_MATRIX", "1.2 3.4 5.6 7.8 9.10 11.12" },
-	{ "WL_OUTPUT", "myOutput" },
-	{ NULL }
-	},
+	.quirk_file = quirk_file,
 )

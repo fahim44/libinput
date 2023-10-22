@@ -35,6 +35,10 @@
 #include <libinput.h>
 #include <math.h>
 
+#ifndef ck_assert_notnull
+#define ck_assert_notnull(ptr) ck_assert_ptr_ne(ptr, NULL)
+#endif
+
 #include "check-double-macros.h"
 
 #include "libinput-private-config.h"
@@ -323,6 +327,8 @@ enum litest_device_type {
 	LITEST_WACOM_ISDV4_524C_PEN,
 	LITEST_MOUSE_FORMAT_STRING,
 	LITEST_LENOVO_SCROLLPOINT,
+	LITEST_SYNAPTICS_PHANTOMCLICKS,
+	LITEST_WACOM_CALIBRATED_TABLET,
 };
 
 #define LITEST_DEVICELESS	-2
@@ -361,6 +367,7 @@ enum litest_device_type {
 #define LITEST_DIRECT		bit(30)
 #define LITEST_TOTEM		bit(31)
 #define LITEST_FORCED_PROXOUT	bit(32)
+#define LITEST_PRECALIBRATED	bit(33)
 
 /* this is a semi-mt device, so we keep track of the touches that the tests
  * send and modify them so that the first touch is always slot 0 and sends
@@ -626,7 +633,7 @@ litest_tablet_set_tool_type(struct litest_device *d,
 
 void
 litest_tablet_proximity_in(struct litest_device *d,
-			   int x, int y,
+			   double x, double y,
 			   struct axis_replacement *axes);
 
 void
@@ -634,17 +641,17 @@ litest_tablet_proximity_out(struct litest_device *d);
 
 void
 litest_tablet_tip_down(struct litest_device *d,
-		       int x, int y,
+		       double x, double y,
 		       struct axis_replacement *axes);
 
 void
 litest_tablet_tip_up(struct litest_device *d,
-		     int x, int y,
+		     double x, double y,
 		     struct axis_replacement *axes);
 
 void
 litest_tablet_motion(struct litest_device *d,
-		     int x, int y,
+		     double x, double y,
 		     struct axis_replacement *axes);
 
 void
@@ -831,6 +838,11 @@ litest_assert_button_event(struct libinput *li,
 			   enum libinput_button_state state);
 
 void
+litest_assert_switch_event(struct libinput *li,
+			   enum libinput_switch sw,
+			   enum libinput_switch_state state);
+
+void
 litest_assert_scroll(struct libinput *li,
 		     enum libinput_event_type axis_type,
 		     enum libinput_pointer_axis axis,
@@ -981,10 +993,6 @@ litest_semi_mt_touch_up(struct litest_device *d,
 			struct litest_semi_mt *semi_mt,
 			unsigned int slot);
 
-#ifndef ck_assert_notnull
-#define ck_assert_notnull(ptr) ck_assert_ptr_ne(ptr, NULL)
-#endif
-
 static inline void
 litest_enable_tap(struct libinput_device *device)
 {
@@ -1064,6 +1072,8 @@ litest_enable_2fg_scroll(struct litest_device *dev)
 
 	expected = LIBINPUT_CONFIG_STATUS_SUCCESS;
 	litest_assert_int_eq(status, expected);
+
+	libinput_device_config_scroll_set_natural_scroll_enabled(device, 0);
 }
 
 static inline void
@@ -1077,6 +1087,8 @@ litest_enable_edge_scroll(struct litest_device *dev)
 
 	expected = LIBINPUT_CONFIG_STATUS_SUCCESS;
 	litest_assert_int_eq(status, expected);
+
+	libinput_device_config_scroll_set_natural_scroll_enabled(device, 0);
 }
 
 static inline bool
@@ -1259,7 +1271,8 @@ litest_send_file(int sock, int fd)
 	return write(sock, buf, n);
 }
 
-static inline int litest_slot_count(struct litest_device *dev)
+static inline int
+litest_slot_count(struct litest_device *dev)
 {
 	if (dev->which == LITEST_ALPS_3FG)
 		return 2;
@@ -1282,7 +1295,7 @@ litest_has_palm_detect_size(struct litest_device *dev)
 	if (bustype == BUS_BLUETOOTH)
 		return 0;
 	if (vendor == VENDOR_ID_APPLE)
-		return 1;
+		return 0;
 
 	rc = libinput_device_get_size(dev->libinput_device, &width, &height);
 

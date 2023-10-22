@@ -1,5 +1,5 @@
 project('libinput', 'c',
-	version : '1.23.0',
+	version : '1.24.0',
 	license : 'MIT/Expat',
 	default_options : [ 'c_std=gnu99', 'warning_level=2' ],
 	meson_version : '>= 0.49.0')
@@ -791,6 +791,7 @@ if get_option('tests')
 		'test/litest-device-synaptics-st.c',
 		'test/litest-device-synaptics-t440.c',
 		'test/litest-device-synaptics-x1-carbon-3rd.c',
+		'test/litest-device-synaptics-phantomclicks.c',
 		'test/litest-device-tablet-mode-switch.c',
 		'test/litest-device-thinkpad-extrabuttons.c',
 		'test/litest-device-trackpoint.c',
@@ -803,6 +804,7 @@ if get_option('tests')
 		'test/litest-device-wacom-bamboo-2fg-pad.c',
 		'test/litest-device-wacom-bamboo-2fg-pen.c',
 		'test/litest-device-wacom-bamboo-16fg-pen.c',
+		'test/litest-device-wacom-calibrated-tablet.c',
 		'test/litest-device-wacom-cintiq-12wx-pen.c',
 		'test/litest-device-wacom-cintiq-13hdt-finger.c',
 		'test/litest-device-wacom-cintiq-13hdt-pad.c',
@@ -974,6 +976,12 @@ if get_option('install-tests')
 else
 	man_config.set('HAVE_INSTALLED_TESTS', '')
 endif
+if get_option('debug-gui')
+	man_config.set('HAVE_DEBUG_GUI', '')
+else
+	man_config.set('HAVE_DEBUG_GUI', '.\"')
+endif
+
 src_man += files(
 	'tools/libinput.man',
 	'tools/libinput-analyze.man',

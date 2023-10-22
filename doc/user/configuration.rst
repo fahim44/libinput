@@ -168,8 +168,12 @@ environment should provide an interface for this.
 Rotation
 ------------------------------------------------------------------------------
 
-The device rotation applies a corrective angle to relative input events.
-This is currently only available on trackpoints which may be used sideways
-or upside-down. The angle can be freely chosen but not all devices support
-rotation other than 0, 90, 180, or 270 degrees. Rotation is off (0 degrees)
-by default.
+The device rotation applies a corrective angle to relative input events,
+allowing the device to be used e.g. sideways or upside-down. For example, a
+trackball may be used in a 90° rotated position for accessibility reasons -
+such a rotated position allows triggering the buttons with the thumb or
+the non-dominant hand.
+
+Note that where a device rotation is higher than 160 but less than 200 degrees,
+the direction of wheels is also inverted. For all other angles, the wheel
+direction is left as-is.
