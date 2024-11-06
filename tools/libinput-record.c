@@ -1486,12 +1486,37 @@ static void
 print_description(FILE *fp, struct libevdev *dev)
 {
 	const struct input_absinfo *x, *y;
+	int bustype;
+	const char *busname;
+
+	bustype = libevdev_get_id_bustype(dev);
+	switch (bustype) {
+	case BUS_USB:
+		busname = " (usb) ";
+		break;
+	case BUS_BLUETOOTH:
+		busname = " (bluetooth) ";
+		break;
+	case BUS_I2C:
+		busname = " (i2c) ";
+		break;
+	case BUS_SPI:
+		busname = " (spi) ";
+		break;
+	case BUS_RMI:
+		busname = " (rmi) ";
+		break;
+	default:
+		busname = " ";
+		break;
+	}
 
 	iprintf(fp, I_EVDEV, "# Name: %s\n", libevdev_get_name(dev));
 	iprintf(fp,
 		I_EVDEV,
-		"# ID: bus %#02x vendor %#02x product %#02x version %#02x\n",
-		libevdev_get_id_bustype(dev),
+		"# ID: bus 0x%04x%svendor 0x%04x product 0x%04x version 0x%04x\n",
+		bustype,
+		busname,
 		libevdev_get_id_vendor(dev),
 		libevdev_get_id_product(dev),
 		libevdev_get_id_version(dev));
@@ -1730,6 +1755,16 @@ print_udev_properties(struct record_device *dev)
 		}
 
 		entry = udev_list_entry_get_next(entry);
+	}
+
+	for (struct udev_device *parent = udev_device;
+	     parent;
+	     parent = udev_device_get_parent(parent)) {
+		const char *driver = udev_device_get_property_value(parent, "DRIVER");
+		if (driver) {
+			iprintf(dev->fp, I_UDEV_DATA, "- DRIVER=%s\n", driver);
+			break;
+		}
 	}
 
 out:
@@ -2577,7 +2612,7 @@ is_char_dev(const char *path)
 
 enum fposition {
 	ERROR,
-	NOFILE,
+	NO_FILE,
 	FIRST,
 	LAST,
 };
@@ -2633,7 +2668,7 @@ find_output_file(int argc, char *argv[], const char **output_file)
 		return ERROR;
 	}
 #undef _m
-	return NOFILE;
+	return NO_FILE;
 }
 
 enum options {

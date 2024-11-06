@@ -66,3 +66,21 @@ input_event_set_time(struct input_event *e,
 	e->input_event_sec = tval.tv_sec;
 	e->input_event_usec = tval.tv_usec;
 }
+
+static inline double
+absinfo_range(const struct input_absinfo *abs)
+{
+	return (double)(abs->maximum - abs->minimum + 1);
+}
+
+static inline double
+absinfo_normalize_value(const struct input_absinfo *abs, int value)
+{
+	return min(1.0, max(0.0, (double)(value - abs->minimum)/(abs->maximum - abs->minimum)));
+}
+
+static inline double
+absinfo_normalize(const struct input_absinfo *abs)
+{
+	return absinfo_normalize_value(abs, abs->value);
+}
